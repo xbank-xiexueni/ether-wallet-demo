@@ -15,11 +15,17 @@
     npm install
     ```
 
-2.  **Start developing.**
+2.  **initial env variable**
+
+    ```shell
+    cd ether-wallet-demo/
+    cp .env.example .env
+    ```
+
+3.  **Start developing.**
 
     start it up.
 
     ```shell
-    cd ether-wallet-demo/
     npm run dev
     ```

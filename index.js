@@ -22,11 +22,17 @@
  *
  * ## 广播交易
  */
+const dotenv = require('dotenv');
+dotenv.config();
 const { generateMnemonic, mnemonicToSeedSync } = require('bip39');
 const { hdkey } = require('ethereumjs-wallet');
 const util = require('ethereumjs-util');
-const { PASSWORD, web3, FROM_ADDRESS, TO_ADDRESS } = require('./config');
+const Tx = require('ethereumjs-tx');
+const Web3 = require('web3');
 
+const { PASSWORD, FROM_ADDRESS, TO_ADDRESS, URL_RPC } = process.env;
+
+const web3 = new Web3(URL_RPC);
 const createAccount = async () => {
   // 1. generate mnemonic
   const mnemonic = generateMnemonic();
@@ -77,14 +83,14 @@ const importAccountByKeystoreAndPassword = (keystoreData, password) => {
 const importAccountByMnemonic = (mnemonic) => {
   /**
    * use m/44'/60'/0'/0/0
-   * need to forEach ["m/44'/60'/0'/0/0", "m/44'/60'/0'/0/1","m/44'/60'/0'/0/2",...] actually
+   * actually need to forEach ["m/44'/60'/0'/0/0", "m/44'/60'/0'/0/1","m/44'/60'/0'/0/2",...]
    */
   // 1. mnemonic to seed
   const seed = mnemonicToSeedSync(mnemonic, PASSWORD);
   // 2. seed to HDWallet
   const hdWallet = hdkey.fromMasterSeed(seed);
   // for (let i = 0; i < 100; i++) {
-  // 3. get first account keypair
+  // 3. get the first account's keypair
   const key = hdWallet.derivePath("m/44'/60'/0'/0/0");
   // 4. get private key
   const privatekey = util.bufferToHex(key._hdkey._privateKey);
@@ -117,11 +123,9 @@ const sendTransaction = async (
   };
   // estimate Gas
   const gas = await web3.eth.estimateGas(rawTx);
-  console.log('🚀 ~ file: index.js:120 ~ gas:', gas);
   rawTx.gas = gas;
-  console.log('🚀 ~ file: index.js:122 ~ rawTx:', rawTx);
+  console.log('🚀 ~ file: index.js:123 ~ rawTx:', rawTx);
 
-  const Tx = require('ethereumjs-tx');
   const tx = new Tx(rawTx);
   console.log('🚀 ~ file: index.js:126 ~ tx:', tx);
   const privateKeyBuffer = Buffer.from(privateKey, 'hex');
