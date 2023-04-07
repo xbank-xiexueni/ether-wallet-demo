@@ -26,7 +26,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { generateMnemonic, mnemonicToSeedSync } = require('bip39');
 const { hdkey } = require('ethereumjs-wallet');
-// const util = require('ethereumjs-util');
+const util = require('ethereumjs-util');
+const Tx = require('ethereumjs-tx');
 const Web3 = require('web3');
 
 const { PASSWORD, FROM_ADDRESS, TO_ADDRESS, URL_RPC } = process.env;
@@ -46,26 +47,22 @@ const createAccount = async () => {
   const key = hdWallet.derivePath("m/44'/60'/0'/0/0");
 
   // 5. keypair to private key
-  const privateKey = web3.utils.bytesToHex(key._hdkey._privateKey);
+  const privateKey = util.bufferToHex(key._hdkey._privateKey);
 
   // 6. keypair to public key
-  const publicKey = web3.utils.bytesToHex(key._hdkey._publicKey);
+  const publicKey = util.bufferToHex(key._hdkey._publicKey);
 
-  // 7. generate address
-  const address = `0x${key.getWallet().getAddress().toString('hex')}`;
-
-  // // 7. public key to address(buffer)
-  // const addressBuffer = util.pubToAddress(key._hdkey._publicKey, true);
-  // const address = web3.utils.toChecksumAddress(
-  //   '0x' + addressBuffer.toString('hex')
-  // );
-  // return;
+  // 7. public key to address(buffer)
+  const addressBuffer = util.pubToAddress(key._hdkey._publicKey, true);
+  const hexAddress = util.toChecksumAddress(
+    '0x' + addressBuffer.toString('hex')
+  );
 
   // 8. private key & user's password to keystore
   const keystore = web3.eth.accounts.encrypt(privateKey, PASSWORD);
 
   return {
-    address,
+    address: hexAddress,
     privateKey,
     publicKey,
     mnemonic,
@@ -96,7 +93,7 @@ const importAccountByMnemonic = (mnemonic) => {
   // 3. get the first account's keypair
   const key = hdWallet.derivePath("m/44'/60'/0'/0/0");
   // 4. get private key
-  const privatekey = web3.utils.bytesToHex(key._hdkey._privateKey);
+  const privatekey = util.bufferToHex(key._hdkey._privateKey);
   // 5. private key to address
   const account = web3.eth.accounts.privateKeyToAccount(privatekey);
 
@@ -107,14 +104,14 @@ const importAccountByMnemonic = (mnemonic) => {
 const sendTransaction = async (
   from = FROM_ADDRESS,
   to = TO_ADDRESS,
-  number = '0.00000001',
-  privateKey = 'f7f2e29fa807a100a07f02931579dd81e3398f2201885ecfdfbedfb656e82edb'
+  number = '0.0001',
+  privateKey
 ) => {
   const nonce = await web3.eth.getTransactionCount(from);
   console.log('🚀 ~ file: index.js:105 ~ nonce:', nonce);
   const gasPrice = await web3.eth.getGasPrice();
   console.log('🚀 ~ file: index.js:107 ~ gasPrice:', gasPrice);
-  const balance = await web3.utils.toWei(number, 'ether');
+  const balance = await web3.utils.toWei(number);
   console.log('🚀 ~ file: index.js:109 ~ balance:', balance);
 
   const rawTx = {
@@ -127,19 +124,18 @@ const sendTransaction = async (
   // estimate Gas
   const gas = await web3.eth.estimateGas(rawTx);
   rawTx.gas = gas;
+  console.log('🚀 ~ file: index.js:123 ~ rawTx:', rawTx);
 
-  const signedTx = await web3.eth.accounts.signTransaction(
-    {
-      ...rawTx,
-    },
-    '0x' + privateKey
-  );
-  console.log('🚀 ~ file: index.js:129 ~ tx:', signedTx);
+  const tx = new Tx(rawTx);
+  console.log('🚀 ~ file: index.js:126 ~ tx:', tx);
+  const privateKeyBuffer = Buffer.from(privateKey, 'hex');
+  tx.sign(privateKeyBuffer);
+  console.log('🚀 ~ file: index.js:129 ~ tx:', tx);
 
-  const serializedTx = signedTx.rawTransaction;
+  const serializedTx = tx.serialize();
   console.log('🚀 ~ file: index.js:132 ~ serializedTx:', serializedTx);
   await web3.eth
-    .sendSignedTransaction(serializedTx, (err, data) => {
+    .sendSignedTransaction('0x' + serializedTx.toString('hex'), (err, data) => {
       console.log(err, 'error');
       console.log(data, 'data');
 
@@ -158,15 +154,13 @@ const sendTransaction = async (
 };
 
 const main = async () => {
+  sendTransaction();
+  return;
   const { address, privateKey, mnemonic, publicKey, keystore } =
     await createAccount();
-  console.log('🚀 ~ file: index.js:162 ~ main ~ address:', address);
 
   // check importAccountByPrivateKey
-  console.log(
-    importAccountByPrivateKey(privateKey).address.toLowerCase() ===
-      address.toLowerCase()
-  );
+  console.log(importAccountByPrivateKey(privateKey).address === address);
   // check importAccountByKeystoreAndPassword
   console.log(
     importAccountByKeystoreAndPassword(JSON.stringify(keystore), PASSWORD)
