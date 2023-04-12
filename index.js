@@ -108,7 +108,7 @@ const sendTransaction = async (
   from = FROM_ADDRESS,
   to = TO_ADDRESS,
   number = '0.00000001',
-  privateKey = 'f7f2e29fa807a100a07f02931579dd81e3398f2201885ecfdfbedfb656e82edb'
+  privateKey = ''
 ) => {
   const nonce = await web3.eth.getTransactionCount(from);
   console.log('🚀 ~ file: index.js:105 ~ nonce:', nonce);
