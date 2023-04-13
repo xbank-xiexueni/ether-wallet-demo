@@ -26,7 +26,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { generateMnemonic, mnemonicToSeedSync } = require('bip39');
 const { hdkey } = require('ethereumjs-wallet');
-// const util = require('ethereumjs-util');
 const Web3 = require('web3');
 
 const { PASSWORD, FROM_ADDRESS, TO_ADDRESS, URL_RPC } = process.env;
@@ -54,13 +53,6 @@ const createAccount = async () => {
   // 7. generate address
   const address = `0x${key.getWallet().getAddress().toString('hex')}`;
 
-  // // 7. public key to address(buffer)
-  // const addressBuffer = util.pubToAddress(key._hdkey._publicKey, true);
-  // const address = web3.utils.toChecksumAddress(
-  //   '0x' + addressBuffer.toString('hex')
-  // );
-  // return;
-
   // 8. private key & user's password to keystore
   const keystore = web3.eth.accounts.encrypt(privateKey, PASSWORD);
 
@@ -86,7 +78,7 @@ const importAccountByKeystoreAndPassword = (keystoreData, password) => {
 const importAccountByMnemonic = (mnemonic) => {
   /**
    * use m/44'/60'/0'/0/0
-   * actually need to forEach ["m/44'/60'/0'/0/0", "m/44'/60'/0'/0/1","m/44'/60'/0'/0/2",...]
+   * forEach ["m/44'/60'/0'/0/0", "m/44'/60'/0'/0/1","m/44'/60'/0'/0/2",...] actually
    */
   // 1. mnemonic to seed
   const seed = mnemonicToSeedSync(mnemonic, PASSWORD);
@@ -104,18 +96,10 @@ const importAccountByMnemonic = (mnemonic) => {
   // }
 };
 
-const sendTransaction = async (
-  from = FROM_ADDRESS,
-  to = TO_ADDRESS,
-  number = '0.00000001',
-  privateKey = ''
-) => {
+const sendTransaction = async (from, to, number = '0.05', privateKey) => {
   const nonce = await web3.eth.getTransactionCount(from);
-  console.log('🚀 ~ file: index.js:105 ~ nonce:', nonce);
   const gasPrice = await web3.eth.getGasPrice();
-  console.log('🚀 ~ file: index.js:107 ~ gasPrice:', gasPrice);
   const balance = await web3.utils.toWei(number, 'ether');
-  console.log('🚀 ~ file: index.js:109 ~ balance:', balance);
 
   const rawTx = {
     nonce: nonce,
@@ -134,21 +118,16 @@ const sendTransaction = async (
     },
     '0x' + privateKey
   );
-  console.log('🚀 ~ file: index.js:129 ~ tx:', signedTx);
 
   const serializedTx = signedTx.rawTransaction;
   console.log('🚀 ~ file: index.js:132 ~ serializedTx:', serializedTx);
   await web3.eth
     .sendSignedTransaction(serializedTx, (err, data) => {
-      console.log(err, 'error');
-      console.log(data, 'data');
-
       if (err) {
         console.log('🚀 ~ file: index.js:129 ~ sendTransaction ~ err:', err);
       }
     })
     .then((data) => {
-      console.log(data), 'then data';
       if (data) {
         console.log('🚀 ~ file: index.js:145 ~ .then ~ data:', data);
       } else {
@@ -158,6 +137,8 @@ const sendTransaction = async (
 };
 
 const main = async () => {
+  // sendTransaction(FROM_ADDRESS, TO_ADDRESS);
+  // return;
   const { address, privateKey, mnemonic, publicKey, keystore } =
     await createAccount();
   console.log('🚀 ~ file: index.js:162 ~ main ~ address:', address);
