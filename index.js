@@ -27,8 +27,16 @@ dotenv.config();
 const { generateMnemonic, mnemonicToSeedSync } = require('bip39');
 const { hdkey } = require('ethereumjs-wallet');
 const Web3 = require('web3');
+const WETH_ABI = require('./constants/weth.json');
 
-const { PASSWORD, FROM_ADDRESS, TO_ADDRESS, URL_RPC } = process.env;
+const {
+  PASSWORD,
+  FROM_ADDRESS,
+  TO_ADDRESS,
+  URL_RPC,
+  SPENDER_ADDRESS,
+  WETH_ADDRESS,
+} = process.env;
 
 const web3 = new Web3(URL_RPC);
 const createAccount = async () => {
@@ -136,12 +144,44 @@ const sendTransaction = async (from, to, number = '0.05', privateKey) => {
     });
 };
 
+const getContractInstance = (abi, address) => {
+  return new web3.eth.Contract(abi, address);
+};
+
+const INITIAL_WEI = '1000000000000000';
 const main = async () => {
-  // sendTransaction(FROM_ADDRESS, TO_ADDRESS);
-  // return;
+  const contractInstance = getContractInstance(WETH_ABI, WETH_ADDRESS);
+  const account = web3.eth.accounts.wallet.add('privateKeyString');
+
+  // write contract
+  await contractInstance.methods
+    .approve(FROM_ADDRESS, INITIAL_WEI)
+    .send({
+      from: account.address,
+      gas: '1000000',
+      // other transaction's params
+    })
+    .then(console.log);
+
+  // read contract
+  contractInstance.methods
+    .allowance(account.address, SPENDER_ADDRESS)
+    .call()
+    .then(console.log);
+
+  return;
+  sendTransaction(FROM_ADDRESS, TO_ADDRESS);
+  return;
   const { address, privateKey, mnemonic, publicKey, keystore } =
     await createAccount();
-  console.log('🚀 ~ file: index.js:162 ~ main ~ address:', address);
+  console.log(
+    '🚀 ~ file: index.js:162 ~ main ~ address:',
+    address,
+    privateKey,
+    mnemonic
+  );
+
+  return;
 
   // check importAccountByPrivateKey
   console.log(
