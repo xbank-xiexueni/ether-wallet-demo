@@ -6,6 +6,7 @@
 - [x] import account by Mnemonic/private key/keystore & password
 - [x] send transaction
 - [ ] token transaction
+- [x] read & write contract
 
 ## 🚀 Quick start
 
