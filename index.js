@@ -96,7 +96,7 @@ const importAccountByMnemonic = (mnemonic) => {
   // 3. get the first account's keypair
   const key = hdWallet.derivePath("m/44'/60'/0'/0/0");
   // 4. get private key
-  const privatekey = web3.utils.bytesToHex(key._hdkey._privateKey);
+  const privatekey = key.getWallet().getPrivateKeyString();
   // 5. private key to address
   const account = web3.eth.accounts.privateKeyToAccount(privatekey);
 
