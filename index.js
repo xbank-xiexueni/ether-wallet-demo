@@ -59,7 +59,7 @@ const createAccount = async () => {
   const publicKey = key.getWallet().getPublicKeyString();
 
   // 7. generate address
-  const address = `0x${key.getWallet().getAddress().toString('hex')}`;
+  const address = key.getWallet().getAddressString();
 
   // 8. private key & user's password to keystore
   const keystore = web3.eth.accounts.encrypt(privateKey, PASSWORD);
