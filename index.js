@@ -53,10 +53,10 @@ const createAccount = async () => {
   const key = hdWallet.derivePath("m/44'/60'/0'/0/0");
 
   // 5. keypair to private key
-  const privateKey = web3.utils.bytesToHex(key._hdkey._privateKey);
+  const privateKey = key.getWallet().getPrivateKeyString();
 
   // 6. keypair to public key
-  const publicKey = web3.utils.bytesToHex(key._hdkey._publicKey);
+  const publicKey = key.getWallet().getPublicKeyString();
 
   // 7. generate address
   const address = `0x${key.getWallet().getAddress().toString('hex')}`;
